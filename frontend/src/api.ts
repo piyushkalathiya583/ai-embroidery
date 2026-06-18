@@ -78,10 +78,15 @@ export const api = {
     }),
 
   // Pipeline + Variations
-  generate: (id: number, n_variants = 4) =>
+  generate: (
+    id: number,
+    n_variants = 2,
+    style = "photoreal",
+    size = "panel"
+  ) =>
     request(`/projects/${id}/generate`, {
       method: "POST",
-      body: JSON.stringify({ n_variants }),
+      body: JSON.stringify({ n_variants, style, size }),
     }),
   variation: (id: number, base_sketch_id: number, variation: string) =>
     request(`/projects/${id}/variations`, {

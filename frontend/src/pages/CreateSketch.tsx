@@ -29,6 +29,8 @@ export default function CreateSketch() {
   const [garment, setGarmentSel] = useState(GARMENTS[0]);
   const [placement, setPlacement] = useState(PLACEMENTS[0]);
   const [m, setM] = useState({ waist: 42, height: 44, margin: 0.5, kali: 12 });
+  const [style, setStyle] = useState("photoreal");
+  const [size, setSize] = useState("panel");
   const [sketches, setSketches] = useState<Sketch[]>([]);
   const [collection, setCollection] = useState<Collection | null>(null);
   const [busy, setBusy] = useState("");
@@ -166,18 +168,43 @@ export default function CreateSketch() {
 
       {/* Step 5: Generate */}
       <section className="card">
-        <h3>5 · Generate Sketches</h3>
-        <button
-          className="btn primary"
-          disabled={busy === "gen"}
-          onClick={guard("gen", async () => {
-            const res = (await api.generate(projectId, 2)) as PipelineResult;
-            setSketches(res.output);
-            await refresh();
-          })}
-        >
-          {busy === "gen" ? "Generating…" : "Generate Sketches"}
-        </button>
+        <h3>5 · Generate Designs</h3>
+        <div className="row">
+          <label className="field">
+            Style
+            <select value={style} onChange={(e) => setStyle(e.target.value)}>
+              <option value="photoreal">Photorealistic embroidery</option>
+              <option value="pencil">Pencil sketch</option>
+            </select>
+          </label>
+          <label className="field">
+            Resolution
+            <select value={size} onChange={(e) => setSize(e.target.value)}>
+              <option value="panel">Tall panel (1024×1536)</option>
+              <option value="square">Square (1024×1024)</option>
+            </select>
+          </label>
+          <button
+            className="btn primary"
+            disabled={busy === "gen"}
+            onClick={guard("gen", async () => {
+              const res = (await api.generate(
+                projectId,
+                2,
+                style,
+                size
+              )) as PipelineResult;
+              setSketches(res.output);
+              await refresh();
+            })}
+          >
+            {busy === "gen" ? "Generating…" : "Generate Designs"}
+          </button>
+        </div>
+        <p className="muted small">
+          Photorealistic mode renders visible threads & stitches for digitising.
+          High-quality generation can take 30–60s.
+        </p>
       </section>
 
       {/* Results + Phase 3 variations */}

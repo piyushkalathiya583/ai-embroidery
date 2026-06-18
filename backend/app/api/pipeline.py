@@ -28,6 +28,9 @@ from app.schemas import (
     Placement,
     ProjectOut,
     ProjectState,
+    RenderStyle,
+    SIZE_DIMENSIONS,
+    SizePreset,
     SketchOut,
     SketchPipelineRequest,
     SketchPipelineResult,
@@ -100,14 +103,18 @@ def _generate_and_persist(
     selection: GarmentSelection,
     measurements: MeasurementResult,
     n_variants: int,
+    style: RenderStyle = RenderStyle.photoreal,
+    size: SizePreset = SizePreset.panel,
 ) -> tuple[list[SketchOut], str, list]:
     """Run Rules -> Prompt -> Image -> Review and persist sketches.
 
     Shared by the initial pipeline and the Phase 3 variation engine.
     """
     rules = select_rules(db, vision, selection)
-    prompt = build_prompt(vision, composition, rules, measurements, selection)
-    image_paths = generate(prompt, n=n_variants)
+    prompt = build_prompt(
+        vision, composition, rules, measurements, selection, style=style
+    )
+    image_paths = generate(prompt, n=n_variants, size=SIZE_DIMENSIONS[size.value])
 
     # Module 12 reviews run concurrently (and can be disabled to save time).
     reviews: list = [None] * len(image_paths)
@@ -180,7 +187,15 @@ def run_pipeline(
 
     # --- Modules 9-12 ---
     outputs, prompt, rules = _generate_and_persist(
-        db, project, vision, composition, selection, measurements, req.n_variants
+        db,
+        project,
+        vision,
+        composition,
+        selection,
+        measurements,
+        req.n_variants,
+        style=req.style,
+        size=req.size,
     )
 
     user.credits -= 1
@@ -237,7 +252,15 @@ def run_variation(
     vision, composition = apply_variation(req.variation, vision, base_composition)
 
     outputs, prompt, rules = _generate_and_persist(
-        db, project, vision, composition, selection, measurements, req.n_variants
+        db,
+        project,
+        vision,
+        composition,
+        selection,
+        measurements,
+        req.n_variants,
+        style=req.style,
+        size=req.size,
     )
 
     user.credits -= 1

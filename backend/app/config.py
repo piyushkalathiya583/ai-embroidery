@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # Free dev providers
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
-    pollinations_model: str = "turbo"  # fast (~1.5s/img); use "flux" for quality
+    pollinations_model: str = "flux"  # high quality (~20-40s/img); "turbo" for speed
 
     # Module 12 review can be disabled to cut latency on short timeouts.
     review_enabled: bool = True

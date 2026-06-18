@@ -60,6 +60,23 @@ class VisionResult(BaseModel):
     layout: str
 
 
+# ---------- Render options (photorealistic embroidery / resolution) ----------
+class RenderStyle(str, Enum):
+    photoreal = "photoreal"  # photorealistic stitched embroidery, visible threads
+    pencil = "pencil"  # original pencil design sketch
+
+
+class SizePreset(str, Enum):
+    square = "square"  # 1024x1024 — motif / neck / border close-ups
+    panel = "panel"  # 1024x1536 — tall garment panel / full layout
+
+
+SIZE_DIMENSIONS: dict[str, str] = {
+    "square": "1024x1024",
+    "panel": "1024x1536",
+}
+
+
 # ---------- Module 5: Garment ----------
 class Garment(str, Enum):
     lehenga = "Lehenga"
@@ -126,6 +143,8 @@ class VariationRequest(BaseModel):
     base_sketch_id: int
     variation: VariationType
     n_variants: int = Field(default=1, ge=1, le=2)
+    style: RenderStyle = RenderStyle.photoreal
+    size: SizePreset = SizePreset.panel
 
 
 # ---------- Phase 4: Collection Builder ----------
@@ -197,6 +216,8 @@ class SketchPipelineRequest(BaseModel):
     # Capped at 2: free Pollinations is ~20s/image from datacenter IPs, so more
     # would exceed the serverless timeout. Raise this if you move off Vercel.
     n_variants: int = Field(default=2, ge=1, le=2)
+    style: RenderStyle = RenderStyle.photoreal
+    size: SizePreset = SizePreset.panel
 
 
 class ProjectState(BaseModel):
