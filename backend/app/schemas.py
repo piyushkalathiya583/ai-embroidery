@@ -122,7 +122,7 @@ class VariationType(str, Enum):
 class VariationRequest(BaseModel):
     base_sketch_id: int
     variation: VariationType
-    n_variants: int = Field(default=2, ge=1, le=4)
+    n_variants: int = Field(default=1, ge=1, le=2)
 
 
 # ---------- Phase 4: Collection Builder ----------
@@ -187,7 +187,9 @@ class SketchOut(BaseModel):
 class SketchPipelineRequest(BaseModel):
     """Kick off the full Phase 2 generation pipeline for a project."""
 
-    n_variants: int = Field(default=2, ge=1, le=4)
+    # Capped at 2: free Pollinations is ~20s/image from datacenter IPs, so more
+    # would exceed the serverless timeout. Raise this if you move off Vercel.
+    n_variants: int = Field(default=2, ge=1, le=2)
 
 
 class SketchPipelineResult(BaseModel):
