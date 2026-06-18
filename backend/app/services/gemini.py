@@ -28,8 +28,10 @@ def analyze_json(instruction: str, image_bytes: bytes, mime_type: str) -> dict:
         ],
         "generationConfig": {"responseMimeType": "application/json"},
     }
-    last: httpx.Response | None = None
-    for attempt in range(3):
+    from fastapi import HTTPException
+
+    backoffs = [2, 4, 8, 12]
+    for attempt in range(len(backoffs) + 1):
         resp = httpx.post(
             _URL.format(model=settings.gemini_model),
             params={"key": settings.gemini_api_key},
@@ -37,11 +39,16 @@ def analyze_json(instruction: str, image_bytes: bytes, mime_type: str) -> dict:
             timeout=60,
         )
         if resp.status_code in (429, 503):
-            last = resp
-            time.sleep(1.5 * (attempt + 1))
-            continue
+            if attempt < len(backoffs):
+                time.sleep(backoffs[attempt])
+                continue
+            # Persistent rate-limit/overload: surface a clean, retryable error.
+            raise HTTPException(
+                status_code=503,
+                detail="AI vision model is busy (free-tier rate limit). "
+                "Please wait a minute and try again.",
+            )
         resp.raise_for_status()
         text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
         return json.loads(text)
-    last.raise_for_status()  # type: ignore[union-attr]
     raise RuntimeError("unreachable")
