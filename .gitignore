@@ -27,3 +27,7 @@ venv/
 Gemini key.txt
 
 admin_token.txt
+render.txt
+.env.render
+_render_deploy.py
+.env.prod

@@ -213,9 +213,9 @@ class SketchOut(BaseModel):
 class SketchPipelineRequest(BaseModel):
     """Kick off the full Phase 2 generation pipeline for a project."""
 
-    # Capped at 2: free Pollinations is ~20s/image from datacenter IPs, so more
-    # would exceed the serverless timeout. Raise this if you move off Vercel.
-    n_variants: int = Field(default=2, ge=1, le=2)
+    # On Render (no serverless timeout) up to 4 variants is fine; each FLUX image
+    # is generated sequentially (~20-40s) to avoid Pollinations rate limits.
+    n_variants: int = Field(default=2, ge=1, le=4)
     style: RenderStyle = RenderStyle.photoreal
     size: SizePreset = SizePreset.panel
 
