@@ -45,7 +45,8 @@ def _generate_openai(prompt: str, n: int, size: str) -> list[str]:
 def _fetch_pollinations(prompt: str, width: int, height: int, seed: int) -> str:
     # The free tier rate-limits concurrency, so requests are sequential with a
     # short backoff on 429 rather than fired in parallel.
-    base = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt)}"
+    # safe="" so slashes in the prompt are encoded, not treated as URL path.
+    base = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt, safe='')}"
     params = {
         "width": width,
         "height": height,
