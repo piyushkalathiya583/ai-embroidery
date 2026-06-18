@@ -21,3 +21,7 @@ venv/
 
 .vercel
 .env*.local
+
+# Secrets / keys (never commit)
+*key*.txt
+Gemini key.txt
