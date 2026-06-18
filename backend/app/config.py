@@ -21,9 +21,18 @@ class Settings(BaseSettings):
     thumbnail_dir: str = "./storage/thumbnails"
     max_upload_mb: int = 15
 
+    # Providers: "openai" | "gemini" (vision/review), "openai" | "pollinations" (image)
+    vision_provider: str = "openai"
+    image_provider: str = "openai"
+
     openai_api_key: str = ""
     vision_model: str = "gpt-4o"
     image_model: str = "gpt-image-1"
+
+    # Free dev providers
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
+    pollinations_model: str = "flux"
 
 
 @lru_cache

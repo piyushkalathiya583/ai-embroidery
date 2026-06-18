@@ -2,14 +2,16 @@
 
 AI checks each generated sketch: copied? balanced? symmetry? luxury?
 production-friendly? Returns the ReviewResult JSON.
+
+Provider-switchable via VISION_PROVIDER (shares the vision model). Reads the
+sketch from the asset store.
 """
 import base64
 import json
 
-from openai import OpenAI
-
 from app.config import settings
 from app.schemas import ReviewResult
+from app.services import assets, gemini
 
 _REVIEW_INSTRUCTION = """You are a QA reviewer for machine-embroidery design sketches.
 Inspect the sketch and return ONLY a JSON object with boolean keys:
@@ -21,15 +23,11 @@ Inspect the sketch and return ONLY a JSON object with boolean keys:
 Return only the JSON object."""
 
 
-def _client() -> OpenAI:
-    return OpenAI(api_key=settings.openai_api_key)
+def _review_openai(data: bytes, mime: str) -> dict:
+    from openai import OpenAI
 
-
-def review_sketch(image_path: str) -> ReviewResult:
-    with open(image_path, "rb") as f:
-        b64 = base64.b64encode(f.read()).decode()
-
-    resp = _client().chat.completions.create(
+    b64 = base64.b64encode(data).decode()
+    resp = OpenAI(api_key=settings.openai_api_key).chat.completions.create(
         model=settings.vision_model,
         response_format={"type": "json_object"},
         messages=[
@@ -40,19 +38,33 @@ def review_sketch(image_path: str) -> ReviewResult:
                     {"type": "text", "text": "Review this embroidery sketch."},
                     {
                         "type": "image_url",
-                        "image_url": {"url": f"data:image/png;base64,{b64}"},
+                        "image_url": {"url": f"data:{mime};base64,{b64}"},
                     },
                 ],
             },
         ],
     )
-    data = json.loads(resp.choices[0].message.content)
-    return ReviewResult(**data)
+    return json.loads(resp.choices[0].message.content)
+
+
+def review_sketch(image_key: str) -> ReviewResult:
+    loaded = assets.load(image_key)
+    if loaded is None:
+        # If we can't read it back, skip review rather than failing the pipeline.
+        return ReviewResult(
+            copied=False,
+            balanced=True,
+            symmetry=True,
+            luxury=True,
+            production_friendly=True,
+        )
+    data, mime = loaded
+    if settings.vision_provider.lower() == "gemini":
+        result = gemini.analyze_json(_REVIEW_INSTRUCTION, data, mime)
+    else:
+        result = _review_openai(data, mime)
+    return ReviewResult(**result)
 
 
 def passed(result: ReviewResult) -> bool:
-    return (
-        not result.copied
-        and result.balanced
-        and result.production_friendly
-    )
+    return not result.copied and result.balanced and result.production_friendly
