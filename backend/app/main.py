@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
+    admin,
     auth,
     collection,
     files,
@@ -50,6 +51,7 @@ app.include_router(measurements.router)
 app.include_router(pipeline.router)
 app.include_router(collection.router)
 app.include_router(files.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     # Module 12 review can be disabled to cut latency on short timeouts.
     review_enabled: bool = True
 
+    # Admin endpoint guard (set ADMIN_TOKEN in env to enable /api/admin/*).
+    admin_token: str = ""
+
     @field_validator(
         "storage_backend", "image_provider", "vision_provider", mode="after"
     )
@@ -51,6 +54,7 @@ class Settings(BaseSettings):
         "gemini_api_key",
         "secret_key",
         "database_url",
+        "admin_token",
         mode="after",
     )
     @classmethod
