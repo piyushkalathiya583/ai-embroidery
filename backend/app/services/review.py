@@ -47,23 +47,21 @@ def _review_openai(data: bytes, mime: str) -> dict:
     return json.loads(resp.choices[0].message.content)
 
 
-def review_sketch(image_key: str) -> ReviewResult:
+def review_sketch(image_key: str) -> ReviewResult | None:
+    """Review a sketch. Returns None on any failure — review is optional QA and
+    must never break the generation pipeline (e.g. Gemini 503/overloaded)."""
     loaded = assets.load(image_key)
     if loaded is None:
-        # If we can't read it back, skip review rather than failing the pipeline.
-        return ReviewResult(
-            copied=False,
-            balanced=True,
-            symmetry=True,
-            luxury=True,
-            production_friendly=True,
-        )
+        return None
     data, mime = loaded
-    if settings.vision_provider.lower() == "gemini":
-        result = gemini.analyze_json(_REVIEW_INSTRUCTION, data, mime)
-    else:
-        result = _review_openai(data, mime)
-    return ReviewResult(**result)
+    try:
+        if settings.vision_provider.lower() == "gemini":
+            result = gemini.analyze_json(_REVIEW_INSTRUCTION, data, mime)
+        else:
+            result = _review_openai(data, mime)
+        return ReviewResult(**result)
+    except Exception:
+        return None
 
 
 def passed(result: ReviewResult) -> bool:
