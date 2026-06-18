@@ -50,6 +50,7 @@ export const api = {
   createProject: (name: string) =>
     request("/projects", { method: "POST", body: JSON.stringify({ name }) }),
   getProject: (id: number) => request(`/projects/${id}`),
+  getState: (id: number) => request(`/projects/${id}/state`),
   toggleFavourite: (id: number) =>
     request(`/projects/${id}/favourite`, { method: "PATCH" }),
   deleteProject: (id: number) =>

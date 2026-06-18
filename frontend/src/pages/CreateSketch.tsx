@@ -10,6 +10,7 @@ import {
   type MeasurementResult,
   type PipelineResult,
   type Project,
+  type ProjectState,
   type Sketch,
   type VisionResult,
 } from "../types";
@@ -31,7 +32,18 @@ export default function CreateSketch() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (projectId) api.getProject(projectId).then((p) => setProject(p as Project));
+    if (!projectId) return;
+    // Rehydrate all saved work so reopening a project resumes where you left off.
+    api.getState(projectId).then((data) => {
+      const s = data as ProjectState;
+      setProject(s.project);
+      if (s.project.garment) setGarmentSel(s.project.garment);
+      if (s.project.placement) setPlacement(s.project.placement);
+      if (s.vision) setVision(s.vision);
+      if (s.measurement_input) setM(s.measurement_input);
+      if (s.measurement_result) setMeasurement(s.measurement_result);
+      if (s.sketches?.length) setSketches(s.sketches);
+    });
   }, [projectId]);
 
   function guard<T>(label: string, fn: () => Promise<T>) {

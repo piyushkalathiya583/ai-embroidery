@@ -23,8 +23,11 @@ from app.schemas import (
     CompositionResult,
     GarmentSelection,
     Garment,
+    MeasurementInput,
     MeasurementResult,
     Placement,
+    ProjectOut,
+    ProjectState,
     SketchOut,
     SketchPipelineRequest,
     SketchPipelineResult,
@@ -47,6 +50,46 @@ def _get_owned(db: Session, project_id: int, user: User) -> Project:
     if not project or project.owner_id != user.id or project.is_deleted:
         raise HTTPException(status_code=404, detail="Project not found.")
     return project
+
+
+@router.get("/state", response_model=ProjectState)
+def get_state(
+    project_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Return all saved work for a project so the UI can resume where it left off."""
+    project = _get_owned(db, project_id, user)
+
+    va = (
+        db.query(VisionAnalysis)
+        .filter(VisionAnalysis.project_id == project.id)
+        .first()
+    )
+    meas = db.query(Measurement).filter(Measurement.project_id == project.id).first()
+    sketches = (
+        db.query(GeneratedSketch)
+        .filter(GeneratedSketch.project_id == project.id)
+        .order_by(GeneratedSketch.created_at.desc())
+        .all()
+    )
+
+    return ProjectState(
+        project=ProjectOut.model_validate(project),
+        vision=VisionResult(**va.result) if va else None,
+        measurement_input=(
+            MeasurementInput(
+                waist=meas.waist,
+                height=meas.height,
+                margin=meas.margin,
+                kali=meas.kali,
+            )
+            if meas
+            else None
+        ),
+        measurement_result=MeasurementResult(**meas.result) if meas else None,
+        sketches=[SketchOut.model_validate(s) for s in sketches],
+    )
 
 
 def _generate_and_persist(

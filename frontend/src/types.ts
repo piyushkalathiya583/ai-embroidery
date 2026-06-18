@@ -73,6 +73,14 @@ export interface Collection {
   items: CollectionItem[];
 }
 
+export interface ProjectState {
+  project: Project;
+  vision: VisionResult | null;
+  measurement_input: MeasurementInput | null;
+  measurement_result: MeasurementResult | null;
+  sketches: Sketch[];
+}
+
 export const GARMENTS = ["Lehenga", "Kurti", "Blouse", "Dupatta", "Panel"];
 export const PLACEMENTS = [
   "Single Kali",

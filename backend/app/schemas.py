@@ -192,6 +192,16 @@ class SketchPipelineRequest(BaseModel):
     n_variants: int = Field(default=2, ge=1, le=2)
 
 
+class ProjectState(BaseModel):
+    """Everything needed to rehydrate the Create Sketch page on reopen."""
+
+    project: "ProjectOut"
+    vision: VisionResult | None = None
+    measurement_input: MeasurementInput | None = None
+    measurement_result: MeasurementResult | None = None
+    sketches: list["SketchOut"] = []
+
+
 class SketchPipelineResult(BaseModel):
     reference_analysis: VisionResult
     garment: GarmentSelection
