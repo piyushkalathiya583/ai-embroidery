@@ -45,6 +45,9 @@ class ProjectOut(BaseModel):
     garment: str | None
     placement: str | None
     created_at: datetime
+    # Populated by the list/get endpoints so the UI can preview generated work.
+    sketch_count: int = 0
+    thumbnail_url: str | None = None
 
 
 # ---------- Module 4: Vision Analysis output ----------

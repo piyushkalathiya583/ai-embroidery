@@ -68,8 +68,24 @@ export default function Projects() {
                 {p.is_favourite ? "★" : "☆"}
               </button>
             </div>
+            {p.thumbnail_url ? (
+              <img
+                className="thumb-img"
+                src={p.thumbnail_url}
+                alt={`${p.name} sketch`}
+                onClick={() => nav(`/projects/${p.id}`)}
+                style={{ cursor: "pointer", height: 140 }}
+              />
+            ) : (
+              <div className="thumb" style={{ height: 140 }}>
+                No sketches yet
+              </div>
+            )}
             <div className="muted small">
-              {p.garment ?? "—"} · {p.status}
+              {p.garment ?? "—"} · {p.status} ·{" "}
+              {p.sketch_count > 0
+                ? `${p.sketch_count} sketch${p.sketch_count > 1 ? "es" : ""}`
+                : "0 sketches"}
             </div>
             <div className="row">
               <button

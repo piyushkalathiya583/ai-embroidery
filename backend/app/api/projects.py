@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Project, User
+from app.models import GeneratedSketch, Project, User
 from app.schemas import GarmentSelection, ProjectCreate, ProjectOut
 from app.security import get_current_user
 
@@ -15,6 +15,17 @@ def _get_owned(db: Session, project_id: int, user: User) -> Project:
     if not project or project.owner_id != user.id or project.is_deleted:
         raise HTTPException(status_code=404, detail="Project not found.")
     return project
+
+
+def _to_out(project: Project) -> ProjectOut:
+    """ProjectOut enriched with sketch count + latest sketch thumbnail."""
+    out = ProjectOut.model_validate(project)
+    sketches = sorted(project.sketches, key=lambda s: s.id, reverse=True)
+    out.sketch_count = len(sketches)
+    if sketches:
+        name = sketches[0].image_path.replace("\\", "/").split("/")[-1]
+        out.thumbnail_url = f"/files/uploads/{name}"
+    return out
 
 
 @router.post("", response_model=ProjectOut, status_code=201)
@@ -41,7 +52,8 @@ def list_projects(
     )
     if favourite is not None:
         q = q.filter(Project.is_favourite.is_(favourite))
-    return q.order_by(Project.created_at.desc()).all()
+    projects = q.order_by(Project.created_at.desc()).all()
+    return [_to_out(p) for p in projects]
 
 
 @router.get("/{project_id}", response_model=ProjectOut)
@@ -50,7 +62,7 @@ def get_project(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return _get_owned(db, project_id, user)
+    return _to_out(_get_owned(db, project_id, user))
 
 
 @router.patch("/{project_id}/favourite", response_model=ProjectOut)

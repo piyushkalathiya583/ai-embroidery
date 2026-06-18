@@ -16,6 +16,8 @@ export interface Project {
   garment: string | null;
   placement: string | null;
   created_at: string;
+  sketch_count: number;
+  thumbnail_url: string | null;
 }
 
 export interface VisionResult {
