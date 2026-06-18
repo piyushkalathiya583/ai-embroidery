@@ -19,6 +19,6 @@
     { "src": "/docs", "dest": "api/index.py" },
     { "src": "/openapi.json", "dest": "api/index.py" },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "/frontend/index.html" }
   ]
 }
