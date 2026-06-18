@@ -156,12 +156,12 @@ export default function CreateSketch() {
           className="btn primary"
           disabled={busy === "gen"}
           onClick={guard("gen", async () => {
-            const res = (await api.generate(projectId, 4)) as PipelineResult;
+            const res = (await api.generate(projectId, 2)) as PipelineResult;
             setSketches(res.output);
             await refresh();
           })}
         >
-          {busy === "gen" ? "Generating…" : "Generate 4 Sketches"}
+          {busy === "gen" ? "Generating…" : "Generate Sketches"}
         </button>
       </section>
 

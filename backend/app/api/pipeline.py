@@ -3,8 +3,12 @@
 API FLOW (roadmap): Vision JSON -> Composition -> Rules -> Prompt Builder ->
 Image API -> Review -> Sketches. Ties Modules 8-12 together.
 """
+from concurrent.futures import ThreadPoolExecutor
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
+from app.config import settings
 
 from app.database import get_db
 from app.models import (
@@ -62,6 +66,12 @@ def _generate_and_persist(
     prompt = build_prompt(vision, composition, rules, measurements, selection)
     image_paths = generate(prompt, n=n_variants)
 
+    # Module 12 reviews run concurrently (and can be disabled to save time).
+    reviews: list = [None] * len(image_paths)
+    if settings.review_enabled:
+        with ThreadPoolExecutor(max_workers=max(1, len(image_paths))) as pool:
+            reviews = list(pool.map(review_sketch, image_paths))
+
     outputs: list[SketchOut] = []
     for idx, path in enumerate(image_paths):
         sketch = GeneratedSketch(
@@ -74,14 +84,15 @@ def _generate_and_persist(
         db.add(sketch)
         db.flush()
 
-        review = review_sketch(path)
-        db.add(
-            Review(
-                sketch_id=sketch.id,
-                result=review.model_dump(),
-                passed=passed(review),
+        review = reviews[idx]
+        if review is not None:
+            db.add(
+                Review(
+                    sketch_id=sketch.id,
+                    result=review.model_dump(),
+                    passed=passed(review),
+                )
             )
-        )
         outputs.append(SketchOut.model_validate(sketch))
 
     return outputs, prompt, rules

@@ -7,6 +7,7 @@ Provider-switchable via IMAGE_PROVIDER:
 Returns asset keys (used to build /files image URLs).
 """
 import base64
+import time
 import urllib.parse
 import uuid
 
@@ -41,30 +42,38 @@ def _generate_openai(prompt: str, n: int, size: str) -> list[str]:
     return keys
 
 
-def _generate_pollinations(prompt: str, n: int, size: str) -> list[str]:
-    width, height = _parse_size(size)
+def _fetch_pollinations(prompt: str, width: int, height: int, seed: int) -> str:
+    # The free tier rate-limits concurrency, so requests are sequential with a
+    # short backoff on 429 rather than fired in parallel.
     base = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt)}"
-    keys = []
-    for i in range(n):
-        resp = httpx.get(
-            base,
-            params={
-                "width": width,
-                "height": height,
-                "model": settings.pollinations_model,
-                "nologo": "true",
-                "seed": i + 1,  # vary per variant
-            },
-            timeout=120,
-            follow_redirects=True,
-        )
+    params = {
+        "width": width,
+        "height": height,
+        "model": settings.pollinations_model,
+        "nologo": "true",
+        "seed": seed,
+    }
+    last_exc: Exception | None = None
+    for attempt in range(4):
+        resp = httpx.get(base, params=params, timeout=120, follow_redirects=True)
+        if resp.status_code == 429:
+            last_exc = httpx.HTTPStatusError(
+                "rate limited", request=resp.request, response=resp
+            )
+            time.sleep(2 * (attempt + 1))
+            continue
         resp.raise_for_status()
         content_type = resp.headers.get("content-type", "image/jpeg").split(";")[0]
         ext = _CT_EXT.get(content_type, "jpg")
         key = _key(ext)
         assets.save(key, resp.content, content_type)
-        keys.append(key)
-    return keys
+        return key
+    raise last_exc  # type: ignore[misc]
+
+
+def _generate_pollinations(prompt: str, n: int, size: str) -> list[str]:
+    width, height = _parse_size(size)
+    return [_fetch_pollinations(prompt, width, height, i + 1) for i in range(n)]
 
 
 def generate(prompt: str, n: int = 4, size: str = "1024x1536") -> list[str]:

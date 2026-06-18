@@ -187,7 +187,7 @@ class SketchOut(BaseModel):
 class SketchPipelineRequest(BaseModel):
     """Kick off the full Phase 2 generation pipeline for a project."""
 
-    n_variants: int = Field(default=4, ge=1, le=4)
+    n_variants: int = Field(default=2, ge=1, le=4)
 
 
 class SketchPipelineResult(BaseModel):
