@@ -1,6 +1,7 @@
 """Google Gemini helper — free-tier vision + JSON output for Modules 4 & 12."""
 import base64
 import json
+import time
 
 import httpx
 
@@ -27,12 +28,20 @@ def analyze_json(instruction: str, image_bytes: bytes, mime_type: str) -> dict:
         ],
         "generationConfig": {"responseMimeType": "application/json"},
     }
-    resp = httpx.post(
-        _URL.format(model=settings.gemini_model),
-        params={"key": settings.gemini_api_key},
-        json=body,
-        timeout=60,
-    )
-    resp.raise_for_status()
-    text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
-    return json.loads(text)
+    last: httpx.Response | None = None
+    for attempt in range(3):
+        resp = httpx.post(
+            _URL.format(model=settings.gemini_model),
+            params={"key": settings.gemini_api_key},
+            json=body,
+            timeout=60,
+        )
+        if resp.status_code in (429, 503):
+            last = resp
+            time.sleep(1.5 * (attempt + 1))
+            continue
+        resp.raise_for_status()
+        text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        return json.loads(text)
+    last.raise_for_status()  # type: ignore[union-attr]
+    raise RuntimeError("unreachable")
