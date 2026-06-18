@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api";
+import { api, fileUrl } from "../api";
 import { useAuth } from "../auth";
 import Lightbox from "../components/Lightbox";
 import {
@@ -216,9 +216,9 @@ export default function CreateSketch() {
               <div className="card sketch" key={s.id}>
                 <img
                   className="thumb-img"
-                  src={s.image_url}
+                  src={fileUrl(s.image_url)}
                   alt={`Sketch ${s.id}`}
-                  onClick={() => setZoom(s.image_url)}
+                  onClick={() => setZoom(fileUrl(s.image_url))}
                 />
                 <div className="variations">
                   {VARIATIONS.map((v) => (
@@ -271,9 +271,9 @@ export default function CreateSketch() {
               <div className="card sketch" key={it.id}>
                 <img
                   className="thumb-img"
-                  src={it.image_url}
+                  src={fileUrl(it.image_url)}
                   alt={it.piece}
-                  onClick={() => setZoom(it.image_url)}
+                  onClick={() => setZoom(fileUrl(it.image_url))}
                 />
                 <strong>{it.piece}</strong>
               </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api";
+import { api, fileUrl } from "../api";
 import type { Project } from "../types";
 
 export default function Projects() {
@@ -71,7 +71,7 @@ export default function Projects() {
             {p.thumbnail_url ? (
               <img
                 className="thumb-img"
-                src={p.thumbnail_url}
+                src={fileUrl(p.thumbnail_url)}
                 alt={`${p.name} sketch`}
                 onClick={() => nav(`/projects/${p.id}`)}
                 style={{ cursor: "pointer", height: 140 }}

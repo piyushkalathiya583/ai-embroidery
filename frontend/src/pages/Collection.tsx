@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api";
+import { api, fileUrl } from "../api";
 import Lightbox from "../components/Lightbox";
 import type { Collection as Coll } from "../types";
 
@@ -49,9 +49,9 @@ export default function Collection() {
               <div className="card sketch" key={it.id}>
                 <img
                   className="thumb-img"
-                  src={it.image_url}
+                  src={fileUrl(it.image_url)}
                   alt={it.piece}
-                  onClick={() => setZoom(it.image_url)}
+                  onClick={() => setZoom(fileUrl(it.image_url))}
                 />
                 <strong>{it.piece}</strong>
               </div>

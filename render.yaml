@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: ai-embroidery-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: STORAGE_BACKEND
+        value: db
+      - key: VISION_PROVIDER
+        value: gemini
+      - key: IMAGE_PROVIDER
+        value: pollinations
+      - key: POLLINATIONS_MODEL
+        value: flux
+      - key: REVIEW_ENABLED
+        value: "true"
+      # Secrets — set these in the Render dashboard (not committed):
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false

@@ -1,6 +1,13 @@
 // Thin fetch wrapper around the FastAPI backend.
+// API_BASE is empty for local/Vercel (same-origin), or the Render backend URL in
+// production (set via VITE_API_BASE_URL at build time).
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 const TOKEN_KEY = "ai_embroidery_token";
+
+export function fileUrl(path: string): string {
+  return path.startsWith("http") ? path : `${API_BASE}${path}`;
+}
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -22,7 +29,7 @@ async function request<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`/api${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
   if (!res.ok) {
     const detail = await res.json().catch(() => ({}));
     throw new Error(detail.detail || `Request failed: ${res.status}`);
