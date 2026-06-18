@@ -25,3 +25,5 @@ venv/
 # Secrets / keys (never commit)
 *key*.txt
 Gemini key.txt
+
+admin_token.txt
