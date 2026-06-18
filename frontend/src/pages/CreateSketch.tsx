@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import Lightbox from "../components/Lightbox";
 import {
   GARMENTS,
   PLACEMENTS,
@@ -19,6 +20,8 @@ export default function CreateSketch() {
   const { id } = useParams();
   const projectId = Number(id);
   const { refresh } = useAuth();
+  const nav = useNavigate();
+  const [zoom, setZoom] = useState<string | null>(null);
 
   const [project, setProject] = useState<Project | null>(null);
   const [vision, setVision] = useState<VisionResult | null>(null);
@@ -184,7 +187,12 @@ export default function CreateSketch() {
           <div className="grid">
             {sketches.map((s) => (
               <div className="card sketch" key={s.id}>
-                <img className="thumb-img" src={s.image_url} alt={`Sketch ${s.id}`} />
+                <img
+                  className="thumb-img"
+                  src={s.image_url}
+                  alt={`Sketch ${s.id}`}
+                  onClick={() => setZoom(s.image_url)}
+                />
                 <div className="variations">
                   {VARIATIONS.map((v) => (
                     <button
@@ -216,6 +224,7 @@ export default function CreateSketch() {
                     )) as Collection;
                     setCollection(c);
                     await refresh();
+                    nav("/collection");
                   })}
                 >
                   {busy === `coll-${s.id}` ? "Building…" : "Build Collection"}
@@ -237,6 +246,7 @@ export default function CreateSketch() {
                   className="thumb-img"
                   src={it.image_url}
                   alt={it.piece}
+                  onClick={() => setZoom(it.image_url)}
                 />
                 <strong>{it.piece}</strong>
               </div>
@@ -244,6 +254,8 @@ export default function CreateSketch() {
           </div>
         </section>
       )}
+
+      <Lightbox src={zoom} onClose={() => setZoom(null)} />
     </div>
   );
 }

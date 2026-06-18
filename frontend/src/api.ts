@@ -95,4 +95,5 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ base_sketch_id }),
     }),
+  getCollections: () => request(`/collections`),
 };

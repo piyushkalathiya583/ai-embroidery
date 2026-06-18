@@ -160,6 +160,10 @@ class CollectionOut(BaseModel):
     base_sketch_id: int
     created_at: datetime
     items: list[CollectionItemOut]
+    # Populated for listing so the Collection tab can label saved sets.
+    project_id: int | None = None
+    project_name: str | None = None
+    title: str | None = None
 
 
 # ---------- Module 12: Review Engine ----------

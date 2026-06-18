@@ -50,6 +50,7 @@ app.include_router(upload.router)
 app.include_router(measurements.router)
 app.include_router(pipeline.router)
 app.include_router(collection.router)
+app.include_router(collection.user_router)
 app.include_router(files.router)
 app.include_router(admin.router)
 

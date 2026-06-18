@@ -73,6 +73,9 @@ export interface Collection {
   base_sketch_id: number;
   created_at: string;
   items: CollectionItem[];
+  project_id?: number | null;
+  project_name?: string | null;
+  title?: string | null;
 }
 
 export interface ProjectState {

@@ -30,6 +30,18 @@ from app.services.prompt_builder import build_prompt
 from app.services.rules import select_rules
 
 router = APIRouter(prefix="/api/projects/{project_id}", tags=["collection"])
+user_router = APIRouter(prefix="/api/collections", tags=["collection"])
+
+
+def _to_collection_out(c: Collection, project: Project | None) -> CollectionOut:
+    out = CollectionOut.model_validate(c)
+    if project is not None:
+        out.project_id = project.id
+        out.project_name = project.name
+    out.title = f"Collection #{c.id}" + (
+        f" — {project.name}" if project else ""
+    )
+    return out
 
 
 def _get_owned(db: Session, project_id: int, user: User) -> Project:
@@ -106,9 +118,30 @@ def list_collections(
     user: User = Depends(get_current_user),
 ):
     project = _get_owned(db, project_id, user)
-    return (
+    cols = (
         db.query(Collection)
         .filter(Collection.project_id == project.id)
         .order_by(Collection.created_at.desc())
         .all()
     )
+    return [_to_collection_out(c, project) for c in cols]
+
+
+@user_router.get("", response_model=list[CollectionOut])
+def list_all_collections(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """All collections across the user's projects — powers the Collection tab."""
+    cols = (
+        db.query(Collection)
+        .join(Project, Collection.project_id == Project.id)
+        .filter(Project.owner_id == user.id, Project.is_deleted.is_(False))
+        .order_by(Collection.created_at.desc())
+        .all()
+    )
+    out = []
+    for c in cols:
+        project = db.get(Project, c.project_id)
+        out.append(_to_collection_out(c, project))
+    return out
